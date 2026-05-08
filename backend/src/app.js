@@ -40,13 +40,20 @@ app.use(cookieParser());
 // Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
+// Routing Strategy: Support both local (/api) and Vercel (stripped) prefixes
+const apiRouter = express.Router();
+
 // Public routes
-app.use('/api/auth', authRouter);
+apiRouter.use('/auth', authRouter);
 
 // Protected routes — verifyJWT runs first
-app.use('/api/projects', verifyJWT, projectsRouter);
-app.use('/api/projects', verifyJWT, dashboardRouter);
-app.use('/api', verifyJWT, tasksRouter);
+apiRouter.use('/projects', verifyJWT, projectsRouter);
+apiRouter.use('/projects', verifyJWT, dashboardRouter);
+apiRouter.use('/', verifyJWT, tasksRouter);
+
+// Mount the apiRouter at both /api (local) and root (Vercel stripped prefix)
+app.use('/api', apiRouter);
+app.use('/', apiRouter);
 
 // Global error handler
 app.use((err, _req, res, _next) => {
