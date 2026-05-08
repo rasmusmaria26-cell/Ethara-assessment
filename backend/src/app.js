@@ -22,10 +22,12 @@ const allowedOrigins = process.env.FRONTEND_URL
 app.use(
   cors({
     origin: (origin, callback) => {
-      // In production, we should be strict about origin when using cookies.
-      // If no origin and not in dev, we might want to reject, but for now we enforce allowedOrigins.
-      if (!origin && process.env.NODE_ENV !== 'production') return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow same-origin (no origin header) or allowed localhost
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      
+      // Allow any Vercel deployment domain
+      if (origin.match(/https?:\/\/.*\.vercel\.app$/)) return callback(null, true);
+
       callback(new Error(`CORS policy: origin ${origin} not allowed`));
     },
     credentials: true,
@@ -48,8 +50,14 @@ app.use('/api', verifyJWT, tasksRouter);
 
 // Global error handler
 app.use((err, _req, res, _next) => {
-  console.error(err);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error('--- SERVER ERROR ---');
+  console.error('Message:', err.message);
+  console.error('Stack:', err.stack);
+  
+  res.status(500).json({ 
+    error: 'Internal server error',
+    details: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
 export default app;
