@@ -1,4 +1,4 @@
-# Ethera — Team Task Manager
+# Ethara — Team Task Manager
 
 A collaborative task management web app where teams create projects, invite members, assign tasks, and track progress. Lightweight Trello/Asana alternative.
 

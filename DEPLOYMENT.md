@@ -1,6 +1,6 @@
-# Deployment Guide: Ethera (Vercel Multi-Service)
+# Deployment Guide: Ethara (Vercel Multi-Service)
 
-This guide walks you through deploying the **Ethera** monorepo to Vercel using the new **Multi-Service** deployment pattern.
+This guide walks you through deploying the **Ethara** monorepo to Vercel using the new **Multi-Service** deployment pattern.
 
 ## Phase 1: Push to GitHub
 

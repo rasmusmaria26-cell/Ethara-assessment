@@ -48,3 +48,26 @@
 .drawer-open {
   overflow: hidden;
 }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%     { transform: translateX(-7px); }
+    40%     { transform: translateX(7px); }
+    60%     { transform: translateX(-4px); }
+    80%     { transform: translateX(4px); }
+  }
+
+  @keyframes pulseDot {
+    0%,80%,100% { opacity: 0.2; transform: scale(0.75); }
+    40%         { opacity: 1;   transform: scale(1); }
+  }

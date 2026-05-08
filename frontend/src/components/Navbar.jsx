@@ -15,7 +15,7 @@ export default function Navbar() {
       <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link to="/" className="font-serif text-xl font-bold tracking-tight text-ink">
-            Ethera
+            Ethara
           </Link>
           <nav>
             <Link to="/projects" className="text-sm font-sans text-ink/50 hover:text-ink transition-colors">
