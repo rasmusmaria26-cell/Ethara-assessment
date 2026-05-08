@@ -7,10 +7,10 @@ export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount: read token from localStorage and validate it with /api/auth/me
+  // On mount: read user from localStorage (if exists) and validate session with /api/auth/me
   useEffect(() => {
-    const token = localStorage.getItem('ttm_token');
-    if (!token) {
+    const storedUser = localStorage.getItem('ttm_user');
+    if (!storedUser) {
       setLoading(false);
       return;
     }
@@ -19,23 +19,26 @@ export function AuthProvider({ children }) {
       .get('/api/auth/me')
       .then((res) => setUser(res.data))
       .catch(() => {
-        // Token is invalid or expired — clear storage
-        localStorage.removeItem('ttm_token');
+        // Session is invalid or expired — clear storage
         localStorage.removeItem('ttm_user');
       })
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback((token, userData) => {
-    localStorage.setItem('ttm_token', token);
+  const login = useCallback((userData) => {
     localStorage.setItem('ttm_user', JSON.stringify(userData));
     setUser(userData);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('ttm_token');
-    localStorage.removeItem('ttm_user');
-    setUser(null);
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/api/auth/logout');
+    } catch (err) {
+      console.error('Logout failed:', err);
+    } finally {
+      localStorage.removeItem('ttm_user');
+      setUser(null);
+    }
   }, []);
 
   return (

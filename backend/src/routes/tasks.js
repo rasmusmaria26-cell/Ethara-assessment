@@ -14,8 +14,35 @@ router.get('/projects/:projectId/tasks', requireRole('member'), async (req, res)
   try {
     const { projectId } = req.params;
     const { status, priority, assigned_to } = req.query;
+    
+    // Pagination params
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const offset = (page - 1) * limit;
 
-    let query = `
+    let whereClause = `WHERE t.project_id = $1`;
+    const params = [projectId];
+    let idx = 2;
+
+    if (status && VALID_STATUSES.includes(status)) {
+      whereClause += ` AND t.status = $${idx++}`;
+      params.push(status);
+    }
+    if (priority && VALID_PRIORITIES.includes(priority)) {
+      whereClause += ` AND t.priority = $${idx++}`;
+      params.push(priority);
+    }
+    if (assigned_to) {
+      whereClause += ` AND t.assigned_to = $${idx++}`;
+      params.push(assigned_to);
+    }
+
+    // Get total count for pagination
+    const { rows: countRows } = await pool.query(`SELECT COUNT(*) FROM tasks t ${whereClause}`, params);
+    const total = parseInt(countRows[0].count, 10);
+
+    // Get paginated data
+    const dataQuery = `
       SELECT
         t.id, t.title, t.description, t.due_date, t.priority, t.status,
         t.created_at, t.project_id,
@@ -24,28 +51,23 @@ router.get('/projects/:projectId/tasks', requireRole('member'), async (req, res)
       FROM tasks t
       LEFT JOIN users a ON a.id = t.assigned_to
       LEFT JOIN users c ON c.id = t.created_by
-      WHERE t.project_id = $1
+      ${whereClause}
+      ORDER BY t.created_at ASC
+      LIMIT $${idx++} OFFSET $${idx++}
     `;
-    const params = [projectId];
-    let idx = 2;
+    params.push(limit, offset);
 
-    if (status && VALID_STATUSES.includes(status)) {
-      query += ` AND t.status = $${idx++}`;
-      params.push(status);
-    }
-    if (priority && VALID_PRIORITIES.includes(priority)) {
-      query += ` AND t.priority = $${idx++}`;
-      params.push(priority);
-    }
-    if (assigned_to) {
-      query += ` AND t.assigned_to = $${idx++}`;
-      params.push(assigned_to);
-    }
-
-    query += ' ORDER BY t.created_at DESC';
-
-    const { rows } = await pool.query(query, params);
-    return res.json(rows);
+    const { rows } = await pool.query(dataQuery, params);
+    
+    return res.json({
+      data: rows,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (err) {
     console.error('GET /projects/:projectId/tasks error:', err);
     return res.status(500).json({ error: 'Internal server error' });

@@ -2,16 +2,15 @@ import jwt from 'jsonwebtoken';
 
 /**
  * verifyJWT middleware
- * Expects: Authorization: Bearer <token>
+ * Expects: token in req.cookies.token
  * Attaches req.user = { id, email, name }
  */
 export function verifyJWT(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Missing or malformed Authorization header' });
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ error: 'Missing token' });
   }
 
-  const token = authHeader.slice(7);
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.user = { id: payload.id, email: payload.email, name: payload.name };

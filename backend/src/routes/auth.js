@@ -20,6 +20,15 @@ function signToken(user) {
   );
 }
 
+function setTokenCookie(res, token) {
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+}
+
 // ─── POST /api/auth/signup ────────────────────────────────────────────────────
 
 router.post('/signup', async (req, res) => {
@@ -61,7 +70,8 @@ router.post('/signup', async (req, res) => {
     const user = rows[0];
 
     const token = signToken(user);
-    return res.status(201).json({ token, user });
+    setTokenCookie(res, token);
+    return res.status(201).json({ user });
   } catch (err) {
     console.error('signup error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -97,14 +107,25 @@ router.post('/login', async (req, res) => {
     }
 
     const token = signToken(user);
+    setTokenCookie(res, token);
     return res.status(200).json({
-      token,
       user: { id: user.id, name: user.name, email: user.email },
     });
   } catch (err) {
     console.error('login error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// ─── POST /api/auth/logout ────────────────────────────────────────────────────
+
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+  return res.json({ message: 'Logged out successfully' });
 });
 
 // ─── GET /api/auth/me ─────────────────────────────────────────────────────────

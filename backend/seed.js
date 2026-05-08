@@ -7,11 +7,11 @@ async function seed() {
     console.log('Seeding mock data...');
 
     // 1. Create or get main user
-    const mainEmail = 'rasmusmaria26@gmail.com';
+    const mainEmail = 'admin@ethera.app';
     let mainUserRes = await pool.query('SELECT id FROM users WHERE email = $1', [mainEmail]);
     
     if (mainUserRes.rows.length === 0) {
-      const hash = await bcrypt.hash('Rasmusmaria@26', 10);
+      const hash = await bcrypt.hash('demo_password123', 10);
       mainUserRes = await pool.query(
         'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
         ['Rasmus Maria', mainEmail, hash]

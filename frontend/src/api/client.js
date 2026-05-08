@@ -6,27 +6,18 @@ const baseURL = import.meta.env.VITE_API_URL || '';
 
 const api = axios.create({
   baseURL,
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach JWT on every request
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('ttm_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// On 401, clear token and redirect to login
+// On 401, clear user data and redirect to login
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('ttm_token');
       localStorage.removeItem('ttm_user');
       // Avoid redirect loop on the login page itself
-      if (!window.location.pathname.startsWith('/login')) {
+      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/signup')) {
         window.location.href = '/login';
       }
     }

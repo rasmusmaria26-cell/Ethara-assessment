@@ -20,7 +20,7 @@ export default function Signup() {
 
     try {
       const res = await api.post('/api/auth/signup', { name, email, password });
-      login(res.data.token, res.data.user);
+      login(res.data.user);
       navigate('/projects');
     } catch (err) {
       setError(err.response?.data?.error || 'Signup failed');

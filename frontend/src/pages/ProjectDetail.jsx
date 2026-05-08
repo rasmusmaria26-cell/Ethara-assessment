@@ -71,17 +71,25 @@ export default function ProjectDetail() {
   const [project, setProject] = useState(null);
   const [tasks, setTasks]     = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingTasks, setLoadingTasks] = useState(false);
   const [error, setError]     = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [page, setPage]       = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+
+  const LIMIT = 50;
 
   const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
       const [projRes, tasksRes] = await Promise.all([
         api.get(`/api/projects/${id}`),
-        api.get(`/api/projects/${id}/tasks`),
+        api.get(`/api/projects/${id}/tasks?page=1&limit=${LIMIT}`),
       ]);
       setProject(projRes.data);
-      setTasks(tasksRes.data);
+      setTasks(tasksRes.data.data);
+      setHasMore(tasksRes.data.pagination.page < tasksRes.data.pagination.totalPages);
+      setPage(1);
       setError('');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load project');
@@ -89,6 +97,22 @@ export default function ProjectDetail() {
       setLoading(false);
     }
   }, [id]);
+
+  const loadMoreTasks = async () => {
+    if (loadingTasks || !hasMore) return;
+    setLoadingTasks(true);
+    try {
+      const nextPage = page + 1;
+      const res = await api.get(`/api/projects/${id}/tasks?page=${nextPage}&limit=${LIMIT}`);
+      setTasks((prev) => [...prev, ...res.data.data]);
+      setHasMore(res.data.pagination.page < res.data.pagination.totalPages);
+      setPage(nextPage);
+    } catch (err) {
+      addToast('Failed to load more tasks', 'error');
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -203,6 +227,25 @@ export default function ProjectDetail() {
                 />
               ))}
             </div>
+
+            {hasMore && (
+              <div className="mt-8 flex justify-center">
+                <button
+                  onClick={loadMoreTasks}
+                  disabled={loadingTasks}
+                  className="text-sm font-sans font-medium text-ink/60 hover:text-ink bg-surface border border-border px-6 py-2 rounded-input shadow-sm transition-all flex items-center gap-2"
+                >
+                  {loadingTasks ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-ink/20 border-t-ink rounded-full animate-spin"></div>
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More Tasks'
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Members sidebar */}

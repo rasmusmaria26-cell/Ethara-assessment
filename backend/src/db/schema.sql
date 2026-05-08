@@ -62,3 +62,11 @@ CREATE TABLE IF NOT EXISTS tasks (
   created_by  UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ DEFAULT now()
 );
+
+-- ────────────────────────────────────────────────
+-- Indexes
+-- ────────────────────────────────────────────────
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_project_members_user_id ON project_members(user_id);
