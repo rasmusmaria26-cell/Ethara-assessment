@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import rateLimit from 'express-rate-limit';
 import authRouter from './routes/auth.js';
 import projectsRouter from './routes/projects.js';
 import tasksRouter from './routes/tasks.js';
@@ -10,6 +10,9 @@ import dashboardRouter from './routes/dashboard.js';
 import { verifyJWT } from './middleware/auth.js';
 
 const app = express();
+
+// Security headers
+app.use(helmet());
 
 // CORS — allow the frontend origin (set FRONTEND_URL env in production)
 const allowedOrigins = process.env.FRONTEND_URL
@@ -32,20 +35,11 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// Rate Limiting for Auth
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 requests per `window` (here, per 15 minutes)
-  message: { error: 'Too many login attempts from this IP, please try again after 15 minutes' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
 // Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // Public routes
-app.use('/api/auth', authLimiter, authRouter);
+app.use('/api/auth', authRouter);
 
 // Protected routes — verifyJWT runs first
 app.use('/api/projects', verifyJWT, projectsRouter);

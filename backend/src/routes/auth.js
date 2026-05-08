@@ -1,10 +1,20 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import pool from '../db/pool.js';
 import { verifyJWT } from '../middleware/auth.js';
 
 const router = Router();
+
+// Rate Limiting for Auth
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 requests per `window` (here, per 15 minutes)
+  message: { error: 'Too many attempts from this IP, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -31,7 +41,7 @@ function setTokenCookie(res, token) {
 
 // ─── POST /api/auth/signup ────────────────────────────────────────────────────
 
-router.post('/signup', async (req, res) => {
+router.post('/signup', authLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -80,7 +90,7 @@ router.post('/signup', async (req, res) => {
 
 // ─── POST /api/auth/login ─────────────────────────────────────────────────────
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 

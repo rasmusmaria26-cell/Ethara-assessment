@@ -7,19 +7,12 @@ export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount: read user from localStorage (if exists) and validate session with /api/auth/me
+  // On mount: always validate session with /api/auth/me
   useEffect(() => {
-    const storedUser = localStorage.getItem('ttm_user');
-    if (!storedUser) {
-      setLoading(false);
-      return;
-    }
-
     api
       .get('/api/auth/me')
       .then((res) => setUser(res.data))
       .catch(() => {
-        // Session is invalid or expired — clear storage
         localStorage.removeItem('ttm_user');
       })
       .finally(() => setLoading(false));

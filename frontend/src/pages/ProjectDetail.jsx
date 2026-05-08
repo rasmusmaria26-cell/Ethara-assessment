@@ -108,7 +108,7 @@ export default function ProjectDetail() {
       setHasMore(res.data.pagination.page < res.data.pagination.totalPages);
       setPage(nextPage);
     } catch (err) {
-      addToast('Failed to load more tasks', 'error');
+      addToast({ message: 'Failed to load more tasks', type: 'error' });
     } finally {
       setLoadingTasks(false);
     }

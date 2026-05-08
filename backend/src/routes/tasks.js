@@ -42,6 +42,10 @@ router.get('/projects/:projectId/tasks', requireRole('member'), async (req, res)
     const total = parseInt(countRows[0].count, 10);
 
     // Get paginated data
+    const limitIdx  = idx++;
+    const offsetIdx = idx++;
+    params.push(limit, offset);
+
     const dataQuery = `
       SELECT
         t.id, t.title, t.description, t.due_date, t.priority, t.status,
@@ -53,9 +57,8 @@ router.get('/projects/:projectId/tasks', requireRole('member'), async (req, res)
       LEFT JOIN users c ON c.id = t.created_by
       ${whereClause}
       ORDER BY t.created_at ASC
-      LIMIT $${idx++} OFFSET $${idx++}
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
     `;
-    params.push(limit, offset);
 
     const { rows } = await pool.query(dataQuery, params);
     
